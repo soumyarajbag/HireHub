@@ -29,7 +29,9 @@ export class EmailService {
 
   public async initialize(): Promise<void> {
     try {
-      this.transporter = nodemailer.createTransporter({
+      const isDevelopment = config.env === 'development';
+
+      this.transporter = nodemailer.createTransport({
         host: config.email.smtp.host,
         port: config.email.smtp.port,
         secure: config.email.smtp.port === 465,
@@ -37,13 +39,32 @@ export class EmailService {
           user: config.email.smtp.user,
           pass: config.email.smtp.pass,
         },
+        tls: {
+          rejectUnauthorized: !isDevelopment,
+        },
       });
 
       await this.transporter.verify();
       logger.info('Email service initialized successfully');
-    } catch (error) {
-      logger.error('Email service initialization failed:', error);
-      throw error;
+    } catch (error: any) {
+      if (
+        error.code === 'ESOCKET' ||
+        error.code === 'EAUTH' ||
+        error.message?.includes('certificate')
+      ) {
+        logger.warn('Email service verification failed:', error.message);
+        logger.warn('Email service will continue but emails may fail to send.');
+        logger.warn(
+          'For production, ensure valid SMTP credentials and certificates.'
+        );
+
+        if (config.env === 'production') {
+          throw error;
+        }
+      } else {
+        logger.error('Email service initialization failed:', error);
+        throw error;
+      }
     }
   }
 
@@ -88,10 +109,13 @@ export class EmailService {
     });
   }
 
-  public async sendPasswordResetEmail(to: string, resetToken: string): Promise<void> {
+  public async sendPasswordResetEmail(
+    to: string,
+    resetToken: string
+  ): Promise<void> {
     const subject = 'Password Reset Request';
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
-    
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Password Reset Request</h2>
@@ -110,10 +134,13 @@ export class EmailService {
     });
   }
 
-  public async sendVerificationEmail(to: string, verificationToken: string): Promise<void> {
+  public async sendVerificationEmail(
+    to: string,
+    verificationToken: string
+  ): Promise<void> {
     const subject = 'Email Verification';
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
-    
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Email Verification</h2>
@@ -124,6 +151,31 @@ export class EmailService {
         <p>Best regards,<br>The Team</p>
       </div>
     `;
+
+    await this.sendEmail({
+      to,
+      subject,
+      html,
+    });
+  }
+
+  public async sendOtpEmail(
+    to: string,
+    otp: string,
+    type: string
+  ): Promise<void> {
+    const { emailTemplates } = require('@/templates/email.templates');
+
+    let subject = 'Verification Code';
+    if (type === 'email_verification') {
+      subject = 'Email Verification OTP';
+    } else if (type === 'password_reset') {
+      subject = 'Password Reset OTP';
+    } else if (type === 'login_otp') {
+      subject = 'Login Verification OTP';
+    }
+
+    const html = emailTemplates.otpEmail('User', otp, type);
 
     await this.sendEmail({
       to,

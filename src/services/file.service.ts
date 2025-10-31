@@ -24,7 +24,10 @@ export class FileService extends BaseService<IFile> {
     try {
       const fileExtension = path.extname(file.originalname);
       const filename = `${uuidv4()}${fileExtension}`;
-      const filePath = path.join(process.env.UPLOAD_PATH || 'uploads', filename);
+      const filePath = path.join(
+        process.env.UPLOAD_PATH || 'uploads',
+        filename
+      );
 
       if (!fs.existsSync(path.dirname(filePath))) {
         fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -79,14 +82,14 @@ export class FileService extends BaseService<IFile> {
     }
   }
 
-  public async uploadVideo(
-    file: any,
-    uploaderId: string
-  ): Promise<IFile> {
+  public async uploadVideo(file: any, uploaderId: string): Promise<IFile> {
     try {
       const fileExtension = path.extname(file.originalname);
       const filename = `${uuidv4()}${fileExtension}`;
-      const filePath = path.join(process.env.UPLOAD_PATH || 'uploads', filename);
+      const filePath = path.join(
+        process.env.UPLOAD_PATH || 'uploads',
+        filename
+      );
 
       if (!fs.existsSync(path.dirname(filePath))) {
         fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -172,8 +175,14 @@ export class FileService extends BaseService<IFile> {
     }
   }
 
-  public async getFilesByUploader(uploaderId: string, pagination: any = {}): Promise<any> {
-    return await this.repository.getFilesByUploaderWithPagination(uploaderId, pagination);
+  public async getFilesByUploader(
+    uploaderId: string,
+    pagination: any = {}
+  ): Promise<any> {
+    return await this.repository.getFilesByUploaderWithPagination(
+      uploaderId,
+      pagination
+    );
   }
 
   public async getFileStats(): Promise<any> {
@@ -202,7 +211,10 @@ export class FileService extends BaseService<IFile> {
     return FileType.OTHER;
   }
 
-  public async generateSignedUrl(publicId: string, options: any = {}): Promise<string> {
+  public async generateSignedUrl(
+    publicId: string,
+    options: any = {}
+  ): Promise<string> {
     return this.cloudinaryConfig.generateImageUrl(publicId, {
       secure: true,
       ...options,

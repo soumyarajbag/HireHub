@@ -1,0 +1,1254 @@
+{
+	"info": {
+		"_postman_id": "interview-api-collection",
+		"name": "Interview API Collection",
+		"description": "Complete API collection for Interview Platform - Job Portal with Authentication, Jobs, Applications, Notifications, and File Management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "apiVersion",
+			"value": "v1",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "jobId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "applicationId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "notificationId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "fileId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register - Send OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('otpId', response.data.otpId || '');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"applicant@example.com\",\n  \"role\": \"applicant\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/register/send-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "register", "send-otp"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register - Verify OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.tokens) {",
+									"        pm.collectionVariables.set('accessToken', response.data.tokens.accessToken);",
+									"        pm.collectionVariables.set('refreshToken', response.data.tokens.refreshToken);",
+									"        pm.collectionVariables.set('userId', response.data.user._id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"applicant@example.com\",\n  \"otp\": \"123456\",\n  \"name\": \"John Doe\",\n  \"password\": \"SecurePass123\",\n  \"role\": \"applicant\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/register/verify-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "register", "verify-otp"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"applicant@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login/send-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "login", "send-otp"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Verify OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.tokens) {",
+									"        pm.collectionVariables.set('accessToken', response.data.tokens.accessToken);",
+									"        pm.collectionVariables.set('refreshToken', response.data.tokens.refreshToken);",
+									"        pm.collectionVariables.set('userId', response.data.user._id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"applicant@example.com\",\n  \"otp\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login/verify-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "login", "verify-otp"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Legacy (Email/Password)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.tokens) {",
+									"        pm.collectionVariables.set('accessToken', response.data.tokens.accessToken);",
+									"        pm.collectionVariables.set('refreshToken', response.data.tokens.refreshToken);",
+									"        pm.collectionVariables.set('userId', response.data.user._id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"applicant@example.com\",\n  \"password\": \"SecurePass123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.tokens) {",
+									"        pm.collectionVariables.set('accessToken', response.data.tokens.accessToken);",
+									"        pm.collectionVariables.set('refreshToken', response.data.tokens.refreshToken);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/refresh",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "refresh"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "logout"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Password Reset - Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"applicant@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/password-reset/send-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "password-reset", "send-otp"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Password Reset - Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"applicant@example.com\",\n  \"otp\": \"123456\",\n  \"newPassword\": \"NewSecurePass123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/password-reset/verify-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "password-reset", "verify-otp"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Email Verification - Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"applicant@example.com\",\n  \"otp\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/verify-email/verify-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "verify-email", "verify-otp"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Email Verification - Resend OTP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"applicant@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/verify-email/resend-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "verify-email", "resend-otp"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "profile"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Name\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "profile"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"SecurePass123\",\n  \"newPassword\": \"NewSecurePass123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/change-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "change-password"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Account",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/auth/delete-account",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "auth", "delete-account"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Jobs",
+			"item": [
+				{
+					"name": "Search Jobs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 && pm.response.json().data && pm.response.json().data.length > 0) {",
+									"    pm.collectionVariables.set('jobId', pm.response.json().data[0]._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/jobs?page=1&limit=10&sort=recent&category=backend&type=remote&minSalary=20000&maxSalary=80000&keyword=nodejs",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "jobs"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "sort",
+									"value": "recent",
+									"description": "Options: recent, popularity, salary, date"
+								},
+								{
+									"key": "category",
+									"value": "backend",
+									"description": "Options: backend, frontend, full_stack, mobile, devops, etc."
+								},
+								{
+									"key": "type",
+									"value": "remote",
+									"description": "Options: full_time, part_time, contract, internship, remote, on_site, hybrid"
+								},
+								{
+									"key": "minSalary",
+									"value": "20000"
+								},
+								{
+									"key": "maxSalary",
+									"value": "80000"
+								},
+								{
+									"key": "keyword",
+									"value": "nodejs"
+								},
+								{
+									"key": "isRemote",
+									"value": "true",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Job By ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/jobs/{{jobId}}?incrementViews=true",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "jobs", "{{jobId}}"],
+							"query": [
+								{
+									"key": "incrementViews",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Popular Tags",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/jobs/popular-tags?limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "jobs", "popular-tags"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Jobs By Category",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/jobs/categories",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "jobs", "categories"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Job (HR Only)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.job) {",
+									"        pm.collectionVariables.set('jobId', response.data.job._id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Senior Backend Developer\",\n  \"description\": \"We are looking for an experienced backend developer with 5+ years of experience in Node.js and TypeScript. You will be responsible for building scalable APIs and microservices.\",\n  \"requirements\": [\n    \"5+ years of experience\",\n    \"Expert in Node.js and TypeScript\",\n    \"Experience with MongoDB\",\n    \"Strong problem-solving skills\"\n  ],\n  \"skills\": [\"nodejs\", \"typescript\", \"mongodb\", \"express\", \"rest-api\"],\n  \"category\": \"backend\",\n  \"type\": [\"full_time\", \"remote\"],\n  \"location\": \"New York, NY\",\n  \"isRemote\": true,\n  \"salary\": {\n    \"min\": 80000,\n    \"max\": 120000,\n    \"currency\": \"USD\"\n  },\n  \"duration\": \"Permanent\",\n  \"applicationDeadline\": \"2024-12-31T23:59:59Z\",\n  \"companyName\": \"Tech Corp\",\n  \"companyLogo\": \"https://example.com/logo.png\",\n  \"companyCoverImage\": \"https://example.com/cover.png\",\n  \"expiresAt\": \"2024-12-31T23:59:59Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/jobs",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "jobs"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Job (HR Only)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Senior Backend Developer - Updated\",\n  \"description\": \"Updated description\",\n  \"salary\": {\n    \"min\": 90000,\n    \"max\": 130000\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/jobs/{{jobId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "jobs", "{{jobId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Jobs (HR Only)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/jobs/my-jobs?status=published&page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "jobs", "my-jobs"],
+							"query": [
+								{
+									"key": "status",
+									"value": "published"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Publish Job (HR Only)",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/jobs/{{jobId}}/publish",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "jobs", "{{jobId}}", "publish"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unpublish Job (HR Only)",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/jobs/{{jobId}}/unpublish",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "jobs", "{{jobId}}", "unpublish"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Close Job (HR Only)",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/jobs/{{jobId}}/close",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "jobs", "{{jobId}}", "close"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Job (HR Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/jobs/{{jobId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "jobs", "{{jobId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Job Statistics (HR/Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/jobs/statistics",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "jobs", "statistics"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get All Users (Admin/Moderator)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/users?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "users"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User By ID (Admin/Moderator)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/users/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "users", "{{userId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Name\",\n  \"role\": \"applicant\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/users/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "users", "{{userId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/users/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "users", "{{userId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deactivate User (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/users/{{userId}}/deactivate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "users", "{{userId}}", "deactivate"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Activate User (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/users/{{userId}}/activate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "users", "{{userId}}", "activate"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Statistics (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/users/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "users", "stats"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Files",
+			"item": [
+				{
+					"name": "Upload File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.file) {",
+									"        pm.collectionVariables.set('fileId', response.data.file._id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "type",
+									"value": "document",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/files/upload",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "files", "upload"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Video",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "video",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/files/upload-video",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "files", "upload-video"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Files",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/files?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "files"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get File By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/files/{{fileId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "files", "{{fileId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete File",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/files/{{fileId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "files", "{{fileId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get File Statistics (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/files/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "files", "stats"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Signed URL",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"publicId\": \"file-public-id\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/files/:publicId/signed-url",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "files", ":publicId", "signed-url"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cleanup Expired Files (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/files/cleanup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "files", "cleanup"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Notifications",
+			"item": [
+				{
+					"name": "Get My Notifications",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 && pm.response.json().data && pm.response.json().data.length > 0) {",
+									"    pm.collectionVariables.set('notificationId', pm.response.json().data[0]._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/notifications?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "notifications"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Unread Notifications",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/notifications/unread",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "notifications", "unread"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Unread Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/notifications/unread-count",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "notifications", "unread-count"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Notification By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/notifications/{{notificationId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "notifications", "{{notificationId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Notification As Read",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/notifications/{{notificationId}}/read",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "notifications", "{{notificationId}}", "read"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mark All Notifications As Read",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/notifications/mark-all-read",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "notifications", "mark-all-read"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Notification",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/notifications/{{notificationId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "notifications", "{{notificationId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Notification (Admin/Moderator)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"recipientId\": \"{{userId}}\",\n  \"title\": \"Test Notification\",\n  \"message\": \"This is a test notification\",\n  \"type\": \"in_app\",\n  \"data\": {\n    \"jobId\": \"{{jobId}}\",\n    \"jobTitle\": \"Senior Backend Developer\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/notifications",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "notifications"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send Bulk Notifications (Admin/Moderator)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"recipientIds\": [\"{{userId}}\"],\n  \"title\": \"Bulk Notification\",\n  \"message\": \"This is a bulk notification\",\n  \"type\": \"in_app\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/notifications/bulk",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "notifications", "bulk"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Notification Statistics (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/notifications/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "notifications", "stats"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cleanup Old Notifications (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/notifications/cleanup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "notifications", "cleanup"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Resend Failed Notifications (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/notifications/resend-failed",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "notifications", "resend-failed"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Socket.IO Testing Guide",
+			"item": [
+				{
+					"name": "README - Socket.IO Testing",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/{{apiVersion}}/socket-test",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "{{apiVersion}}", "socket-test"]
+						},
+						"description": "Postman doesn't natively support Socket.IO/WebSocket. Use one of these methods:\n\n1. **Socket.IO Client (Browser Console)**:\n```javascript\nconst socket = io('http://localhost:3000', {\n  auth: {\n    token: 'YOUR_ACCESS_TOKEN'\n  }\n});\n\nsocket.on('connect', () => {\n  console.log('Connected:', socket.id);\n});\n\nsocket.on('notification', (data) => {\n  console.log('Notification received:', data);\n});\n```\n\n2. **Socket.IO Client (Node.js)**:\n```bash\nnpm install socket.io-client\n```\n```javascript\nconst io = require('socket.io-client');\nconst socket = io('http://localhost:3000', {\n  auth: { token: 'YOUR_ACCESS_TOKEN' }\n});\n\nsocket.on('notification', (data) => {\n  console.log('Notification:', data);\n});\n```\n\n3. **Postman WebSocket** (Limited - doesn't support Socket.IO protocol):\n   - Use Postman's WebSocket feature for basic testing\n   - May not work with Socket.IO authentication\n\n4. **Recommended Tools**:\n   - Socket.IO Client Tool: https://amritb.github.io/socketio-client-tool/\n   - Hoppscotch: https://hoppscotch.io/ (WebSocket support)\n   - Insomnia: Has Socket.IO support\n\n**Testing Real-time Notifications:**\n1. Connect using Socket.IO client with your access token\n2. Trigger a notification via API\n3. You should receive the notification in real-time"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
+

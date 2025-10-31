@@ -7,7 +7,10 @@ export class BcryptUtil {
     return await bcrypt.hash(password, this.SALT_ROUNDS);
   }
 
-  public static async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
+  public static async comparePassword(
+    password: string,
+    hashedPassword: string
+  ): Promise<boolean> {
     return await bcrypt.compare(password, hashedPassword);
   }
 
@@ -15,7 +18,10 @@ export class BcryptUtil {
     return await bcrypt.hash(data, this.SALT_ROUNDS);
   }
 
-  public static async compareData(data: string, hashedData: string): Promise<boolean> {
+  public static async compareData(
+    data: string,
+    hashedData: string
+  ): Promise<boolean> {
     return await bcrypt.compare(data, hashedData);
   }
 }

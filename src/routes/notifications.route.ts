@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import { NotificationController } from '@/controllers/notification.controller';
 import { authenticate, authorize } from '@/middleware/auth.middleware';
-import { validateMongoId, validatePagination } from '@/middleware/validation.middleware';
-import { validateNotification, validateBulkNotification } from '@/middleware/validation.middleware';
+import {
+  validateMongoId,
+  validatePagination,
+} from '@/middleware/validation.middleware';
+import { validateNotification } from '@/middleware/validation.middleware';
+import { validateRequest } from '@/utils/validation';
 
 const router = Router();
 const notificationController = new NotificationController();
@@ -11,7 +15,7 @@ router.post(
   '/',
   authenticate,
   authorize('admin', 'moderator'),
-  validateNotification,
+  validateRequest(validateNotification),
   notificationController.createNotification
 );
 
@@ -19,14 +23,14 @@ router.post(
   '/bulk',
   authenticate,
   authorize('admin', 'moderator'),
-  validateBulkNotification,
+  validateRequest(validateNotification),
   notificationController.sendBulkNotifications
 );
 
 router.get(
   '/',
   authenticate,
-  validatePagination,
+  validateRequest(validatePagination),
   notificationController.getNotifications
 );
 
@@ -52,14 +56,14 @@ router.get(
 router.get(
   '/:id',
   authenticate,
-  validateMongoId('id'),
+  validateRequest(validateMongoId('id')),
   notificationController.getNotificationById
 );
 
 router.patch(
   '/:id/read',
   authenticate,
-  validateMongoId('id'),
+  validateRequest(validateMongoId('id')),
   notificationController.markAsRead
 );
 
@@ -72,7 +76,7 @@ router.patch(
 router.delete(
   '/:id',
   authenticate,
-  validateMongoId('id'),
+  validateRequest(validateMongoId('id')),
   notificationController.deleteNotification
 );
 

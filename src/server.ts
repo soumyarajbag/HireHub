@@ -35,10 +35,13 @@ class Server {
     try {
       await this.initializeServices();
       this.setupSwagger();
+      this.app.setupErrorHandling();
       this.startServer();
       this.setupGracefulShutdown();
-      
-      logger.info(`Server started on port ${config.port} in ${config.env} mode`);
+
+      logger.info(
+        `Server started on port ${config.port} in ${config.env} mode`
+      );
     } catch (error) {
       logger.error('Failed to start server:', error);
       process.exit(1);
@@ -47,17 +50,40 @@ class Server {
 
   private async initializeServices(): Promise<void> {
     logger.info('Initializing services...');
-    
+
     await this.databaseConfig.connect();
-    await this.redisConfig.connect();
+
+    try {
+      await this.redisConfig.connect();
+    } catch (error) {
+      logger.warn(
+        'Redis connection failed, continuing without Redis. Some features may be limited.'
+      );
+      logger.warn(
+        'To fix: Set a valid REDIS_URL in your .env file or use local Redis (REDIS_HOST, REDIS_PORT)'
+      );
+    }
+
     this.cloudinaryConfig.configure();
-    await this.emailService.initialize();
-    
+
+    try {
+      await this.emailService.initialize();
+    } catch (error) {
+      logger.warn(
+        'Email service initialization failed, continuing without email. Some features may be limited.'
+      );
+      logger.warn(
+        'To fix: Ensure valid SMTP credentials in your .env file (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS)'
+      );
+    }
+
     logger.info('All services initialized successfully');
   }
 
   private setupSwagger(): void {
-    this.app.getApp().use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+    this.app
+      .getApp()
+      .use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
     logger.info('Swagger documentation available at /api-docs');
   }
 
@@ -65,7 +91,7 @@ class Server {
     this.server = http.createServer(this.app.getApp());
     this.socketManager.initialize(this.server);
     this.cronJobManager.startAllJobs();
-    
+
     this.server.listen(config.port, () => {
       logger.info(`HTTP server listening on port ${config.port}`);
     });
@@ -74,16 +100,16 @@ class Server {
   private setupGracefulShutdown(): void {
     const shutdown = async (signal: string) => {
       logger.info(`Received ${signal}. Starting graceful shutdown...`);
-      
+
       if (this.server) {
         this.server.close(async () => {
           logger.info('HTTP server closed');
-          
+
           try {
             this.cronJobManager.stopAllJobs();
             await this.redisConfig.disconnect();
             await this.databaseConfig.disconnect();
-            
+
             logger.info('Graceful shutdown completed');
             process.exit(0);
           } catch (error) {
@@ -96,7 +122,7 @@ class Server {
 
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('SIGINT', () => shutdown('SIGINT'));
-    
+
     process.on('uncaughtException', (error) => {
       logger.error('Uncaught Exception:', error);
       process.exit(1);

@@ -4,7 +4,9 @@ import Joi from 'joi';
 dotenv.config();
 
 const envSchema = Joi.object({
-  NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+  NODE_ENV: Joi.string()
+    .valid('development', 'production', 'test')
+    .default('development'),
   PORT: Joi.number().default(3000),
   MONGODB_URI: Joi.string().required(),
   MONGODB_TEST_URI: Joi.string().when('NODE_ENV', {
@@ -12,9 +14,26 @@ const envSchema = Joi.object({
     then: Joi.required(),
     otherwise: Joi.optional(),
   }),
-  REDIS_HOST: Joi.string().default('localhost'),
-  REDIS_PORT: Joi.number().default(6379),
-  REDIS_PASSWORD: Joi.string().optional(),
+  REDIS_URL: Joi.string()
+    .optional()
+    .allow('', null)
+    .description('Upstash Redis URL (recommended)'),
+  REDIS_HOST: Joi.string().when('REDIS_URL', {
+    is: Joi.exist().not('').not(null),
+    then: Joi.optional(),
+    otherwise: Joi.string().default('localhost'),
+  }),
+  REDIS_PORT: Joi.number().when('REDIS_URL', {
+    is: Joi.exist().not('').not(null),
+    then: Joi.optional(),
+    otherwise: Joi.number().default(6379),
+  }),
+  REDIS_PASSWORD: Joi.string().allow('', null).optional().empty(''),
+  REDIS_TLS: Joi.string()
+    .valid('true', 'false', '1', '0')
+    .optional()
+    .allow('', null)
+    .description('Enable TLS for Redis connection'),
   JWT_SECRET: Joi.string().required(),
   JWT_EXPIRES_IN: Joi.string().default('7d'),
   JWT_REFRESH_SECRET: Joi.string().required(),
@@ -31,14 +50,28 @@ const envSchema = Joi.object({
   RATE_LIMIT_WINDOW_MS: Joi.number().default(900000),
   RATE_LIMIT_MAX_REQUESTS: Joi.number().default(100),
   CORS_ORIGIN: Joi.string().default('http://localhost:3000'),
-  LOG_LEVEL: Joi.string().valid('error', 'warn', 'info', 'debug').default('info'),
+  LOG_LEVEL: Joi.string()
+    .valid('error', 'warn', 'info', 'debug')
+    .default('info'),
   LOG_FILE: Joi.string().default('logs/app.log'),
   MAX_FILE_SIZE: Joi.number().default(5242880),
   UPLOAD_PATH: Joi.string().default('uploads/'),
   SOCKET_CORS_ORIGIN: Joi.string().default('http://localhost:3000'),
 }).unknown();
 
-const { error, value: envVars } = envSchema.validate(process.env);
+const processedEnv = { ...process.env };
+Object.keys(processedEnv).forEach((key) => {
+  if (processedEnv[key] === '') {
+    delete processedEnv[key];
+  }
+});
+
+const { error, value: envVars } = envSchema.validate(processedEnv, {
+  allowUnknown: true,
+  stripUnknown: true,
+  abortEarly: false,
+  convert: true,
+});
 
 if (error) {
   throw new Error(`Config validation error: ${error.message}`);
@@ -48,12 +81,17 @@ export const config = {
   env: envVars.NODE_ENV,
   port: envVars.PORT,
   database: {
-    uri: envVars.NODE_ENV === 'test' ? envVars.MONGODB_TEST_URI : envVars.MONGODB_URI,
+    uri:
+      envVars.NODE_ENV === 'test'
+        ? envVars.MONGODB_TEST_URI
+        : envVars.MONGODB_URI,
   },
   redis: {
+    url: envVars.REDIS_URL,
     host: envVars.REDIS_HOST,
     port: envVars.REDIS_PORT,
     password: envVars.REDIS_PASSWORD,
+    tls: envVars.REDIS_TLS === 'true' || envVars.REDIS_TLS === '1',
   },
   jwt: {
     secret: envVars.JWT_SECRET,

@@ -1,25 +1,37 @@
 import { UserRepository } from '@/repositories/user.repository';
 import { BaseService } from './base.service';
 import { IUser } from '@/models/user.entity';
-import { UserCreateInput, UserUpdateInput, LoginInput, PasswordResetInput, EmailVerificationInput } from '@/types';
+import {
+  UserCreateInput,
+  UserUpdateInput,
+  LoginInput,
+  PasswordResetInput,
+  EmailVerificationInput,
+} from '@/types';
 import { UserRole } from '@/enums';
+import { OtpType } from '@/models/otp.entity';
 import { BcryptUtil } from '@/utils/bcrypt';
 import { JwtUtil } from '@/utils/jwt';
 import { EmailService } from '@/utils/email';
+import { OtpService } from './otp.service';
 import { RedisConfig } from '@/config/redis';
 import { logger } from '@/utils/logger';
 
 export class UserService extends BaseService<IUser> {
   private emailService: EmailService;
+  private otpService: OtpService;
   private redisConfig: RedisConfig;
 
   constructor(userRepository: UserRepository) {
     super(userRepository);
     this.emailService = EmailService.getInstance();
+    this.otpService = OtpService.getInstance();
     this.redisConfig = RedisConfig.getInstance();
   }
 
-  public async createUser(userData: UserCreateInput): Promise<{ user: IUser; tokens: any }> {
+  public async createUser(
+    userData: UserCreateInput
+  ): Promise<{ user: IUser; tokens: any }> {
     const existingUser = await this.repository.findByEmail(userData.email);
     if (existingUser) {
       throw new Error('User with this email already exists');
@@ -27,31 +39,27 @@ export class UserService extends BaseService<IUser> {
 
     const user = await this.repository.create({
       ...userData,
-      role: userData.role || UserRole.USER,
+      role: userData.role || UserRole.APPLICANT,
+      isEmailVerified: false,
     });
 
-    const emailVerificationToken = user.generateEmailVerificationToken();
-    await user.save();
+    await this.otpService.sendOtp(user.email, OtpType.EMAIL_VERIFICATION);
 
     const tokens = JwtUtil.generateTokenPair({
       id: user._id,
       email: user.email,
       role: user.role,
-      tokenVersion: user.tokenVersion,
+      tokenVersion: user.tokenVersion ?? 0,
     });
-
-    try {
-      await this.emailService.sendVerificationEmail(user.email, emailVerificationToken);
-    } catch (error) {
-      logger.error('Failed to send verification email:', error);
-    }
 
     await this.cacheUser(user);
 
     return { user, tokens };
   }
 
-  public async login(loginData: LoginInput): Promise<{ user: IUser; tokens: any }> {
+  public async login(
+    loginData: LoginInput
+  ): Promise<{ user: IUser; tokens: any }> {
     const user = await this.repository.findByEmailWithPassword(loginData.email);
     if (!user) {
       throw new Error('Invalid credentials');
@@ -68,22 +76,27 @@ export class UserService extends BaseService<IUser> {
 
     await this.repository.updateLastLogin(user._id);
 
+    const updatedUser = await this.repository.findById(user._id);
+    if (!updatedUser) {
+      throw new Error('User not found after update');
+    }
+
     const tokens = JwtUtil.generateTokenPair({
-      id: user._id,
-      email: user.email,
-      role: user.role,
-      tokenVersion: user.tokenVersion,
+      id: updatedUser._id,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      tokenVersion: updatedUser.tokenVersion ?? 0,
     });
 
-    await this.cacheUser(user);
+    await this.cacheUser(updatedUser);
 
-    return { user, tokens };
+    return { user: updatedUser, tokens };
   }
 
   public async refreshTokens(refreshToken: string): Promise<{ tokens: any }> {
     const payload = JwtUtil.verifyRefreshToken(refreshToken);
     const user = await this.repository.findById(payload.userId);
-    
+
     if (!user || !user.isActive || user.tokenVersion !== payload.tokenVersion) {
       throw new Error('Invalid refresh token');
     }
@@ -92,7 +105,7 @@ export class UserService extends BaseService<IUser> {
       id: user._id,
       email: user.email,
       role: user.role,
-      tokenVersion: user.tokenVersion,
+      tokenVersion: user.tokenVersion ?? 0,
     });
 
     return { tokens };
@@ -103,7 +116,10 @@ export class UserService extends BaseService<IUser> {
     await this.redisConfig.del(`user:${userId}`);
   }
 
-  public async updateUser(userId: string, updateData: UserUpdateInput): Promise<IUser | null> {
+  public async updateUser(
+    userId: string,
+    updateData: UserUpdateInput
+  ): Promise<IUser | null> {
     if (updateData.email) {
       const existingUser = await this.repository.findByEmail(updateData.email);
       if (existingUser && existingUser._id.toString() !== userId) {
@@ -132,8 +148,16 @@ export class UserService extends BaseService<IUser> {
     return false;
   }
 
-  public async verifyEmail(verificationData: EmailVerificationInput): Promise<IUser | null> {
-    const user = await this.repository.findByEmailVerificationToken(verificationData.token);
+  public async verifyEmail(
+    verificationData: EmailVerificationInput
+  ): Promise<IUser | null> {
+    if (!verificationData.token) {
+      throw new Error('Verification token required');
+    }
+
+    const user = await this.repository.findByEmailVerificationToken(
+      verificationData.token
+    );
     if (!user) {
       throw new Error('Invalid verification token');
     }
@@ -146,36 +170,141 @@ export class UserService extends BaseService<IUser> {
     return updatedUser;
   }
 
-  public async requestPasswordReset(email: string): Promise<void> {
+  public async sendPasswordResetOtp(
+    email: string
+  ): Promise<{ message: string }> {
     const user = await this.repository.findByEmail(email);
     if (!user) {
-      return;
+      return {
+        message: 'If an account exists, an OTP has been sent to your email',
+      };
     }
 
-    const resetToken = user.generatePasswordResetToken();
-    await user.save();
+    await this.otpService.sendOtp(email, OtpType.PASSWORD_RESET);
 
-    try {
-      await this.emailService.sendPasswordResetEmail(user.email, resetToken);
-    } catch (error) {
-      logger.error('Failed to send password reset email:', error);
-    }
+    return {
+      message: 'If an account exists, an OTP has been sent to your email',
+    };
   }
 
-  public async resetPassword(resetData: PasswordResetInput): Promise<IUser | null> {
-    const user = await this.repository.findByPasswordResetToken(resetData.token);
+  public async resetPasswordWithOtp(
+    email: string,
+    otp: string,
+    newPassword: string
+  ): Promise<IUser | null> {
+    const user = await this.repository.findByEmail(email);
     if (!user) {
-      throw new Error('Invalid or expired reset token');
+      throw new Error('Invalid request');
     }
 
-    user.password = resetData.newPassword;
-    user.clearPasswordResetToken();
+    const isValid = await this.otpService.verifyOtp(
+      email,
+      otp,
+      OtpType.PASSWORD_RESET
+    );
+    if (!isValid) {
+      throw new Error('Invalid or expired OTP');
+    }
+
+    user.password = newPassword;
     await user.save();
 
     await this.repository.incrementTokenVersion(user._id);
     await this.cacheUser(user);
 
     return user;
+  }
+
+  public async requestPasswordReset(email: string): Promise<void> {
+    await this.sendPasswordResetOtp(email);
+  }
+
+  public async resetPassword(
+    resetData: PasswordResetInput
+  ): Promise<IUser | null> {
+    if (resetData.token) {
+      const user = await this.repository.findByPasswordResetToken(
+        resetData.token
+      );
+      if (!user) {
+        throw new Error('Invalid or expired reset token');
+      }
+
+      user.password = resetData.newPassword;
+      user.clearPasswordResetToken();
+      await user.save();
+
+      await this.repository.incrementTokenVersion(user._id);
+      await this.cacheUser(user);
+
+      return user;
+    }
+
+    if (resetData.email && resetData.otp && resetData.newPassword) {
+      return await this.resetPasswordWithOtp(
+        resetData.email,
+        resetData.otp,
+        resetData.newPassword
+      );
+    }
+
+    throw new Error('Invalid reset data');
+  }
+
+  public async verifyEmailWithOtp(
+    userId: string,
+    otp: string
+  ): Promise<IUser | null> {
+    const user = await this.repository.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (!user.email || typeof user.email !== 'string') {
+      throw new Error('User email is invalid');
+    }
+
+    if (user.isEmailVerified) {
+      throw new Error('Email already verified');
+    }
+
+    const isValid = await this.otpService.verifyOtp(
+      user.email,
+      otp,
+      OtpType.EMAIL_VERIFICATION
+    );
+    if (!isValid) {
+      throw new Error('Invalid or expired OTP');
+    }
+
+    const updatedUser = await this.repository.verifyEmail(user._id);
+    if (updatedUser) {
+      await this.cacheUser(updatedUser);
+      try {
+        await this.emailService.sendEmailVerifiedEmail(user.email, user.name);
+      } catch (error) {
+        logger.error('Failed to send email verified notification:', error);
+      }
+    }
+
+    return updatedUser;
+  }
+
+  public async resendVerificationOtp(
+    email: string
+  ): Promise<{ message: string }> {
+    const user = await this.repository.findByEmail(email);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.isEmailVerified) {
+      throw new Error('Email is already verified');
+    }
+
+    await this.otpService.sendOtp(email, OtpType.EMAIL_VERIFICATION);
+
+    return { message: 'Verification OTP sent to your email' };
   }
 
   public async getUserFromCache(userId: string): Promise<IUser | null> {
@@ -192,7 +321,11 @@ export class UserService extends BaseService<IUser> {
 
   private async cacheUser(user: IUser): Promise<void> {
     try {
-      await this.redisConfig.set(`user:${user._id}`, JSON.stringify(user), 3600);
+      await this.redisConfig.set(
+        `user:${user._id}`,
+        JSON.stringify(user),
+        3600
+      );
     } catch (error) {
       logger.error('Failed to cache user:', error);
     }

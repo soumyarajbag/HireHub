@@ -23,7 +23,7 @@ beforeEach(async () => {
   if (config.env === 'test') {
     const mongoose = require('mongoose');
     const collections = await mongoose.connection.db.collections();
-    
+
     for (const collection of collections) {
       await collection.deleteMany({});
     }

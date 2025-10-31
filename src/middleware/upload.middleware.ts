@@ -5,7 +5,11 @@ import { AppError } from './error.middleware';
 
 const storage = multer.memoryStorage();
 
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (
+  req: any,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
   const allowedMimes = [
     'image/jpeg',
     'image/png',
@@ -29,7 +33,12 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new AppError('Invalid file type. Only images, videos, audio, and documents are allowed.', 400));
+    cb(
+      new AppError(
+        'Invalid file type. Only images, videos, audio, and documents are allowed.',
+        400
+      )
+    );
   }
 };
 
@@ -43,12 +52,17 @@ export const upload = multer({
 
 export const uploadSingle = (fieldName: string) => upload.single(fieldName);
 
-export const uploadMultiple = (fieldName: string, maxCount: number = 5) => 
+export const uploadMultiple = (fieldName: string, maxCount: number = 5) =>
   upload.array(fieldName, maxCount);
 
 export const uploadFields = (fields: multer.Field[]) => upload.fields(fields);
 
-export const handleUploadError = (error: any, req: any, res: any, next: any) => {
+export const handleUploadError = (
+  error: any,
+  req: any,
+  res: any,
+  next: any
+) => {
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
@@ -69,13 +83,13 @@ export const handleUploadError = (error: any, req: any, res: any, next: any) => 
       });
     }
   }
-  
+
   if (error instanceof AppError) {
     return res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });
   }
-  
+
   next(error);
 };

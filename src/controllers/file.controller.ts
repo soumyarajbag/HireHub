@@ -14,14 +14,13 @@ export class FileController extends BaseController {
       return this.handleError(new Error('No file uploaded'), res);
     }
 
-    const file = await fileService.uploadFile(req.file, req.user!._id, req.body.type);
-    
-    return this.handleSuccess(
-      res,
-      'File uploaded successfully',
-      { file },
-      201
+    const file = await fileService.uploadFile(
+      req.file,
+      req.user!._id,
+      req.body.type
     );
+
+    return this.handleSuccess(res, 'File uploaded successfully', { file }, 201);
   });
 
   public uploadVideo = asyncHandler(async (req: Request, res: Response) => {
@@ -30,7 +29,7 @@ export class FileController extends BaseController {
     }
 
     const file = await fileService.uploadVideo(req.file, req.user!._id);
-    
+
     return this.handleSuccess(
       res,
       'Video uploaded successfully',
@@ -40,8 +39,11 @@ export class FileController extends BaseController {
   });
 
   public getFiles = asyncHandler(async (req: Request, res: Response) => {
-    const result = await fileService.getFilesByUploader(req.user!._id, req.query);
-    
+    const result = await fileService.getFilesByUploader(
+      req.user!._id,
+      req.query
+    );
+
     return this.handleSuccess(
       res,
       'Files retrieved successfully',
@@ -53,7 +55,7 @@ export class FileController extends BaseController {
 
   public getFileById = asyncHandler(async (req: Request, res: Response) => {
     const file = await fileService.findById(req.params.id);
-    
+
     if (!file) {
       return this.handleNotFound(res, 'File not found');
     }
@@ -61,57 +63,48 @@ export class FileController extends BaseController {
     if (file.uploadedBy.toString() !== req.user!._id) {
       return this.handleForbidden(res, 'Access denied to this file');
     }
-    
-    return this.handleSuccess(
-      res,
-      'File retrieved successfully',
-      { file }
-    );
+
+    return this.handleSuccess(res, 'File retrieved successfully', { file });
   });
 
   public deleteFile = asyncHandler(async (req: Request, res: Response) => {
     const success = await fileService.deleteFile(req.params.id, req.user!._id);
-    
+
     if (!success) {
       return this.handleNotFound(res, 'File not found or access denied');
     }
-    
-    return this.handleSuccess(
-      res,
-      'File deleted successfully'
-    );
+
+    return this.handleSuccess(res, 'File deleted successfully');
   });
 
   public getFileStats = asyncHandler(async (req: Request, res: Response) => {
     const stats = await fileService.getFileStats();
-    
-    return this.handleSuccess(
-      res,
-      'File statistics retrieved successfully',
-      { stats: stats[0] || {} }
-    );
+
+    return this.handleSuccess(res, 'File statistics retrieved successfully', {
+      stats: stats[0] || {},
+    });
   });
 
-  public generateSignedUrl = asyncHandler(async (req: Request, res: Response) => {
-    const { publicId } = req.params;
-    const { options = {} } = req.body;
-    
-    const signedUrl = await fileService.generateSignedUrl(publicId, options);
-    
-    return this.handleSuccess(
-      res,
-      'Signed URL generated successfully',
-      { signedUrl }
-    );
-  });
+  public generateSignedUrl = asyncHandler(
+    async (req: Request, res: Response) => {
+      const { publicId } = req.params;
+      const { options = {} } = req.body;
 
-  public cleanupExpiredFiles = asyncHandler(async (req: Request, res: Response) => {
-    const deletedCount = await fileService.cleanupExpiredFiles();
-    
-    return this.handleSuccess(
-      res,
-      'Expired files cleaned up successfully',
-      { deletedCount }
-    );
-  });
+      const signedUrl = await fileService.generateSignedUrl(publicId, options);
+
+      return this.handleSuccess(res, 'Signed URL generated successfully', {
+        signedUrl,
+      });
+    }
+  );
+
+  public cleanupExpiredFiles = asyncHandler(
+    async (req: Request, res: Response) => {
+      const deletedCount = await fileService.cleanupExpiredFiles();
+
+      return this.handleSuccess(res, 'Expired files cleaned up successfully', {
+        deletedCount,
+      });
+    }
+  );
 }

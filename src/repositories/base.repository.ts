@@ -1,4 +1,10 @@
-import { Document, Model, FilterQuery, UpdateQuery, QueryOptions } from 'mongoose';
+import {
+  Document,
+  Model,
+  FilterQuery,
+  UpdateQuery,
+  QueryOptions,
+} from 'mongoose';
 import { PaginationQuery, PaginationResult } from '@/types';
 
 export abstract class BaseRepository<T extends Document> {
@@ -60,15 +66,26 @@ export abstract class BaseRepository<T extends Document> {
     };
   }
 
-  public async updateById(id: string, update: UpdateQuery<T>): Promise<T | null> {
+  public async updateById(
+    id: string,
+    update: UpdateQuery<T>
+  ): Promise<T | null> {
     return await this.model.findByIdAndUpdate(id, update, { new: true }).exec();
   }
 
-  public async updateOne(filter: FilterQuery<T>, update: UpdateQuery<T>): Promise<T | null> {
-    return await this.model.findOneAndUpdate(filter, update, { new: true }).exec();
+  public async updateOne(
+    filter: FilterQuery<T>,
+    update: UpdateQuery<T>
+  ): Promise<T | null> {
+    return await this.model
+      .findOneAndUpdate(filter, update, { new: true })
+      .exec();
   }
 
-  public async updateMany(filter: FilterQuery<T>, update: UpdateQuery<T>): Promise<any> {
+  public async updateMany(
+    filter: FilterQuery<T>,
+    update: UpdateQuery<T>
+  ): Promise<any> {
     return await this.model.updateMany(filter, update).exec();
   }
 
@@ -98,7 +115,9 @@ export abstract class BaseRepository<T extends Document> {
     update: UpdateQuery<T>,
     options: QueryOptions = {}
   ): Promise<T | null> {
-    return await this.model.findByIdAndUpdate(id, update, { new: true, ...options }).exec();
+    return await this.model
+      .findByIdAndUpdate(id, update, { new: true, ...options })
+      .exec();
   }
 
   public async findOneAndUpdate(
@@ -106,7 +125,9 @@ export abstract class BaseRepository<T extends Document> {
     update: UpdateQuery<T>,
     options: QueryOptions = {}
   ): Promise<T | null> {
-    return await this.model.findOneAndUpdate(filter, update, { new: true, ...options }).exec();
+    return await this.model
+      .findOneAndUpdate(filter, update, { new: true, ...options })
+      .exec();
   }
 
   public async aggregate(pipeline: any[]): Promise<any[]> {

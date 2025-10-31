@@ -4,7 +4,8 @@ import { JwtUtil } from './jwt';
 import { UserService } from '@/services/user.service';
 import { UserRepository } from '@/repositories/user.repository';
 import { User } from '@/models/user.entity';
-import { SocketData, SocketEvent } from '@/types';
+import { SocketData } from '@/types';
+import { SocketEvent } from '@/enums';
 import { logger } from './logger';
 import { config } from '@/config/environment';
 
@@ -46,8 +47,10 @@ export class SocketManager {
 
     this.io.use(async (socket, next) => {
       try {
-        const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
-        
+        const token =
+          socket.handshake.auth.token ||
+          socket.handshake.headers.authorization?.split(' ')[1];
+
         if (!token) {
           return next(new Error('Authentication token required'));
         }
@@ -59,7 +62,10 @@ export class SocketManager {
           return next(new Error('Invalid or inactive user'));
         }
 
-        if (user.tokenVersion !== payload.tokenVersion) {
+        if (
+          payload.tokenVersion !== undefined &&
+          user.tokenVersion !== payload.tokenVersion
+        ) {
           return next(new Error('Token has been invalidated'));
         }
 
@@ -95,13 +101,19 @@ export class SocketManager {
       socket.on(SocketEvent.JOIN_ROOM, (room: string) => {
         socket.join(room);
         logger.info(`User ${userId} joined room ${room}`);
-        socket.emit(SocketEvent.JOIN_ROOM, { room, message: `Joined room ${room}` });
+        socket.emit(SocketEvent.JOIN_ROOM, {
+          room,
+          message: `Joined room ${room}`,
+        });
       });
 
       socket.on(SocketEvent.LEAVE_ROOM, (room: string) => {
         socket.leave(room);
         logger.info(`User ${userId} left room ${room}`);
-        socket.emit(SocketEvent.LEAVE_ROOM, { room, message: `Left room ${room}` });
+        socket.emit(SocketEvent.LEAVE_ROOM, {
+          room,
+          message: `Left room ${room}`,
+        });
       });
 
       socket.on(SocketEvent.MESSAGE, (data: any) => {
@@ -127,11 +139,24 @@ export class SocketManager {
   public emitToUser(userId: string, event: string, data: any): void {
     if (!this.io) return;
 
-    this.io.emit(event, {
-      ...data,
-      targetUser: userId,
-      timestamp: new Date().toISOString(),
+    const sockets = this.io.sockets.sockets;
+    let userFound = false;
+
+    sockets.forEach((socket) => {
+      if (socket.data.userId === userId) {
+        socket.emit(event, {
+          ...data,
+          timestamp: new Date().toISOString(),
+        });
+        userFound = true;
+      }
     });
+
+    if (!userFound) {
+      logger.info(
+        `User ${userId} not connected. Notification will be delivered when they connect.`
+      );
+    }
   }
 
   public emitToRoom(room: string, event: string, data: any): void {

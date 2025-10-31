@@ -11,40 +11,53 @@ export class NotificationRepository extends BaseRepository<INotification> {
     recipientId: string,
     pagination: any = {}
   ): Promise<any> {
-    return await this.findWithPagination({ recipient: recipientId }, pagination);
+    return await this.findWithPagination(
+      { recipient: recipientId },
+      pagination
+    );
   }
 
   public async findByType(type: NotificationType): Promise<INotification[]> {
     return await this.find({ type });
   }
 
-  public async findByStatus(status: NotificationStatus): Promise<INotification[]> {
+  public async findByStatus(
+    status: NotificationStatus
+  ): Promise<INotification[]> {
     return await this.find({ status });
   }
 
-  public async findUnreadByRecipient(recipientId: string): Promise<INotification[]> {
+  public async findUnreadByRecipient(
+    recipientId: string
+  ): Promise<INotification[]> {
     return await this.find({
       recipient: recipientId,
-      status: { $in: [NotificationStatus.SENT, NotificationStatus.DELIVERED] },
-      readAt: { $exists: false },
+      isRead: false,
     });
   }
 
-  public async markAsRead(notificationId: string): Promise<INotification | null> {
+  public async markAsRead(
+    notificationId: string
+  ): Promise<INotification | null> {
     return await this.updateById(notificationId, {
       status: NotificationStatus.READ,
       readAt: new Date(),
+      isRead: true,
     });
   }
 
-  public async markAsDelivered(notificationId: string): Promise<INotification | null> {
+  public async markAsDelivered(
+    notificationId: string
+  ): Promise<INotification | null> {
     return await this.updateById(notificationId, {
       status: NotificationStatus.DELIVERED,
       sentAt: new Date(),
     });
   }
 
-  public async markAsFailed(notificationId: string): Promise<INotification | null> {
+  public async markAsFailed(
+    notificationId: string
+  ): Promise<INotification | null> {
     return await this.updateById(notificationId, {
       status: NotificationStatus.FAILED,
     });
@@ -54,12 +67,12 @@ export class NotificationRepository extends BaseRepository<INotification> {
     return await this.updateMany(
       {
         recipient: recipientId,
-        status: { $in: [NotificationStatus.SENT, NotificationStatus.DELIVERED] },
-        readAt: { $exists: false },
+        isRead: false,
       },
       {
         status: NotificationStatus.READ,
         readAt: new Date(),
+        isRead: true,
       }
     );
   }
@@ -67,8 +80,7 @@ export class NotificationRepository extends BaseRepository<INotification> {
   public async getUnreadCount(recipientId: string): Promise<number> {
     return await this.count({
       recipient: recipientId,
-      status: { $in: [NotificationStatus.SENT, NotificationStatus.DELIVERED] },
-      readAt: { $exists: false },
+      isRead: false,
     });
   }
 
@@ -108,7 +120,17 @@ export class NotificationRepository extends BaseRepository<INotification> {
                           k: '$$this.type',
                           v: {
                             $add: [
-                              { $ifNull: [{ $getField: { field: '$$this.type', input: '$$value' } }, 0] },
+                              {
+                                $ifNull: [
+                                  {
+                                    $getField: {
+                                      field: '$$this.type',
+                                      input: '$$value',
+                                    },
+                                  },
+                                  0,
+                                ],
+                              },
                               1,
                             ],
                           },
@@ -134,7 +156,17 @@ export class NotificationRepository extends BaseRepository<INotification> {
                           k: '$$this.status',
                           v: {
                             $add: [
-                              { $ifNull: [{ $getField: { field: '$$this.status', input: '$$value' } }, 0] },
+                              {
+                                $ifNull: [
+                                  {
+                                    $getField: {
+                                      field: '$$this.status',
+                                      input: '$$value',
+                                    },
+                                  },
+                                  0,
+                                ],
+                              },
                               1,
                             ],
                           },

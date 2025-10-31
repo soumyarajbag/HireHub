@@ -12,7 +12,11 @@ export class AppError extends Error implements ApiError {
   public statusCode: number;
   public isOperational: boolean;
 
-  constructor(message: string, statusCode: number = 500, isOperational: boolean = true) {
+  constructor(
+    message: string,
+    statusCode: number = 500,
+    isOperational: boolean = true
+  ) {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = isOperational;
@@ -68,10 +72,19 @@ export const errorHandler = (
     message = 'Something went wrong';
   }
 
-  return ResponseHandler.error(res, message, statusCode, config.env === 'development' ? error.stack : undefined);
+  return ResponseHandler.error(
+    res,
+    message,
+    statusCode,
+    config.env === 'development' ? error.stack : undefined
+  );
 };
 
-export const notFoundHandler = (req: Request, res: Response, next: NextFunction) => {
+export const notFoundHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const error = new AppError(`Route ${req.originalUrl} not found`, 404);
   next(error);
 };

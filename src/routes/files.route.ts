@@ -2,8 +2,15 @@ import { Router } from 'express';
 import { FileController } from '@/controllers/file.controller';
 import { authenticate, authorize } from '@/middleware/auth.middleware';
 import { fileUploadLimiter } from '@/middleware/rate-limiter.middleware';
-import { uploadSingle, handleUploadError } from '@/middleware/upload.middleware';
-import { validateMongoId, validatePagination } from '@/middleware/validation.middleware';
+import {
+  uploadSingle,
+  handleUploadError,
+} from '@/middleware/upload.middleware';
+import {
+  validateMongoId,
+  validatePagination,
+} from '@/middleware/validation.middleware';
+import { validateRequest } from '@/utils/validation';
 
 const router = Router();
 const fileController = new FileController();
@@ -29,7 +36,7 @@ router.post(
 router.get(
   '/',
   authenticate,
-  validatePagination,
+  validateRequest(validatePagination),
   fileController.getFiles
 );
 
@@ -43,14 +50,14 @@ router.get(
 router.get(
   '/:id',
   authenticate,
-  validateMongoId('id'),
+  validateRequest(validateMongoId('id')),
   fileController.getFileById
 );
 
 router.delete(
   '/:id',
   authenticate,
-  validateMongoId('id'),
+  validateRequest(validateMongoId('id')),
   fileController.deleteFile
 );
 

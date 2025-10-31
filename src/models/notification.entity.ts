@@ -8,9 +8,18 @@ export interface INotification extends Document {
   type: NotificationType;
   status: NotificationStatus;
   recipient: mongoose.Types.ObjectId;
-  data?: any;
+  data?: {
+    jobId?: string;
+    jobTitle?: string;
+    applicationId?: string;
+    applicantId?: string;
+    applicantName?: string;
+    status?: string;
+    [key: string]: any;
+  };
   sentAt?: Date;
   readAt?: Date;
+  isRead?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +60,11 @@ const notificationSchema = new Schema<INotification>(
     readAt: {
       type: Date,
     },
+    isRead: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   {
     timestamps: true,
@@ -58,8 +72,12 @@ const notificationSchema = new Schema<INotification>(
 );
 
 notificationSchema.index({ recipient: 1 });
+notificationSchema.index({ recipient: 1, isRead: 1 });
 notificationSchema.index({ status: 1 });
 notificationSchema.index({ type: 1 });
 notificationSchema.index({ createdAt: -1 });
 
-export const Notification = mongoose.model<INotification>('Notification', notificationSchema);
+export const Notification = mongoose.model<INotification>(
+  'Notification',
+  notificationSchema
+);

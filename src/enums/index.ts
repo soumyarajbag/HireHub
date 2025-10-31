@@ -2,6 +2,8 @@ export enum UserRole {
   USER = 'user',
   ADMIN = 'admin',
   MODERATOR = 'moderator',
+  HR = 'hr',
+  APPLICANT = 'applicant',
 }
 
 export enum UserStatus {
@@ -69,6 +71,9 @@ export enum NotificationType {
   PUSH = 'push',
   SMS = 'sms',
   IN_APP = 'in_app',
+  APPLICATION_STATUS = 'application_status',
+  NEW_APPLICANT = 'new_applicant',
+  JOB_RECOMMENDATION = 'job_recommendation',
 }
 
 export enum NotificationStatus {
@@ -121,4 +126,43 @@ export enum ValidationRule {
   DATE = 'date',
   NUMBER = 'number',
   BOOLEAN = 'boolean',
+}
+
+export enum JobStatus {
+  DRAFT = 'draft',
+  PUBLISHED = 'published',
+  EXPIRED = 'expired',
+  CLOSED = 'closed',
+}
+
+export enum JobType {
+  FULL_TIME = 'full_time',
+  PART_TIME = 'part_time',
+  CONTRACT = 'contract',
+  INTERNSHIP = 'internship',
+  REMOTE = 'remote',
+  ON_SITE = 'on_site',
+  HYBRID = 'hybrid',
+}
+
+export enum JobCategory {
+  BACKEND = 'backend',
+  FRONTEND = 'frontend',
+  FULL_STACK = 'full_stack',
+  MOBILE = 'mobile',
+  DEVOPS = 'devops',
+  DATA_SCIENCE = 'data_science',
+  MACHINE_LEARNING = 'machine_learning',
+  UI_UX = 'ui_ux',
+  QA = 'qa',
+  SECURITY = 'security',
+  BLOCKCHAIN = 'blockchain',
+  OTHER = 'other',
+}
+
+export enum SortBy {
+  RECENT = 'recent',
+  POPULARITY = 'popularity',
+  SALARY = 'salary',
+  DATE = 'date',
 }

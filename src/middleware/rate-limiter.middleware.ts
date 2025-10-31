@@ -11,12 +11,16 @@ const createRateLimiter = (windowMs: number, max: number, message?: string) => {
     max,
     message: {
       success: false,
-      message: message || 'Too many requests from this IP, please try again later.',
+      message:
+        message || 'Too many requests from this IP, please try again later.',
     },
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res) => {
-      return ResponseHandler.tooManyRequests(res, message || 'Too many requests');
+      return ResponseHandler.tooManyRequests(
+        res,
+        message || 'Too many requests'
+      );
     },
     skip: (req) => {
       return config.env === 'test';

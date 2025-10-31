@@ -1,10 +1,12 @@
 import jwt from 'jsonwebtoken';
+import { Request } from 'express';
 import { config } from '@/config/environment';
 
 export interface JwtPayload {
   userId: string;
   email: string;
   role: string;
+  tokenVersion?: number;
   iat?: number;
   exp?: number;
 }
@@ -17,13 +19,17 @@ export interface RefreshTokenPayload {
 }
 
 export class JwtUtil {
-  public static generateAccessToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
+  public static generateAccessToken(
+    payload: Omit<JwtPayload, 'iat' | 'exp'>
+  ): string {
     return jwt.sign(payload, config.jwt.secret, {
       expiresIn: config.jwt.expiresIn,
     });
   }
 
-  public static generateRefreshToken(payload: Omit<RefreshTokenPayload, 'iat' | 'exp'>): string {
+  public static generateRefreshToken(
+    payload: Omit<RefreshTokenPayload, 'iat' | 'exp'>
+  ): string {
     return jwt.sign(payload, config.jwt.refreshSecret, {
       expiresIn: config.jwt.refreshExpiresIn,
     });
@@ -45,22 +51,32 @@ export class JwtUtil {
     }
   }
 
-  public static generateTokenPair(user: { id: string; email: string; role: string; tokenVersion: number }) {
+  public static generateTokenPair(user: {
+    id: string;
+    email: string;
+    role: string;
+    tokenVersion: number;
+  }) {
+    const tokenVersion = user.tokenVersion ?? 0;
+
     const accessToken = this.generateAccessToken({
       userId: user.id,
       email: user.email,
       role: user.role,
+      tokenVersion: tokenVersion,
     });
 
     const refreshToken = this.generateRefreshToken({
       userId: user.id,
-      tokenVersion: user.tokenVersion,
+      tokenVersion: tokenVersion,
     });
 
     return { accessToken, refreshToken };
   }
 
-  public static extractTokenFromHeader(authHeader: string | undefined): string | null {
+  public static extractTokenFromHeader(
+    authHeader: string | undefined
+  ): string | null {
     if (!authHeader) {
       return null;
     }
@@ -71,5 +87,26 @@ export class JwtUtil {
     }
 
     return parts[1];
+  }
+
+  public static extractTokenFromCookie(
+    cookies: any,
+    cookieName: string = 'accessToken'
+  ): string | null {
+    if (!cookies || !cookies[cookieName]) {
+      return null;
+    }
+    return cookies[cookieName];
+  }
+
+  public static extractToken(
+    req: Request,
+    cookieName: string = 'accessToken'
+  ): string | null {
+    const cookieToken = this.extractTokenFromCookie(req.cookies, cookieName);
+    if (cookieToken) {
+      return cookieToken;
+    }
+    return this.extractTokenFromHeader(req.headers.authorization);
   }
 }

@@ -3,3 +3,4 @@ export { AuthController } from './auth.controller';
 export { UserController } from './user.controller';
 export { FileController } from './file.controller';
 export { NotificationController } from './notification.controller';
+export { JobController } from './job.controller';

@@ -21,14 +21,14 @@ export class DatabaseConfig {
     }
 
     try {
-      const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/express-typescript-backend';
-      
+      const mongoUri =
+        process.env.MONGODB_URI ||
+        'mongodb://localhost:27017/express-typescript-backend';
+
       await mongoose.connect(mongoUri, {
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 5000,
         socketTimeoutMS: 45000,
-        bufferCommands: false,
-        bufferMaxEntries: 0,
       });
 
       this.isConnected = true;
@@ -48,7 +48,6 @@ export class DatabaseConfig {
         logger.info('Database reconnected');
         this.isConnected = true;
       });
-
     } catch (error) {
       logger.error('Database connection failed:', error);
       throw error;

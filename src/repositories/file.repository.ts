@@ -19,7 +19,10 @@ export class FileRepository extends BaseRepository<IFile> {
     return await this.findOne({ publicId });
   }
 
-  public async updateStatus(fileId: string, status: FileStatus): Promise<IFile | null> {
+  public async updateStatus(
+    fileId: string,
+    status: FileStatus
+  ): Promise<IFile | null> {
     return await this.updateById(fileId, { status });
   }
 
@@ -27,7 +30,10 @@ export class FileRepository extends BaseRepository<IFile> {
     uploaderId: string,
     pagination: any = {}
   ): Promise<any> {
-    return await this.findWithPagination({ uploadedBy: uploaderId }, pagination);
+    return await this.findWithPagination(
+      { uploadedBy: uploaderId },
+      pagination
+    );
   }
 
   public async getFileStats(): Promise<any> {
@@ -69,7 +75,17 @@ export class FileRepository extends BaseRepository<IFile> {
                           k: '$$this.type',
                           v: {
                             $add: [
-                              { $ifNull: [{ $getField: { field: '$$this.type', input: '$$value' } }, 0] },
+                              {
+                                $ifNull: [
+                                  {
+                                    $getField: {
+                                      field: '$$this.type',
+                                      input: '$$value',
+                                    },
+                                  },
+                                  0,
+                                ],
+                              },
                               1,
                             ],
                           },
@@ -95,7 +111,17 @@ export class FileRepository extends BaseRepository<IFile> {
                           k: '$$this.status',
                           v: {
                             $add: [
-                              { $ifNull: [{ $getField: { field: '$$this.status', input: '$$value' } }, 0] },
+                              {
+                                $ifNull: [
+                                  {
+                                    $getField: {
+                                      field: '$$this.status',
+                                      input: '$$value',
+                                    },
+                                  },
+                                  0,
+                                ],
+                              },
                               1,
                             ],
                           },

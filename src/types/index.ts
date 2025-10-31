@@ -1,3 +1,6 @@
+import { Request } from 'express';
+import { UserRole } from '@/enums';
+
 export interface User {
   _id: string;
   email: string;
@@ -41,12 +44,34 @@ export interface RefreshTokenInput {
 }
 
 export interface PasswordResetInput {
-  token: string;
+  token?: string;
+  email?: string;
+  otp?: string;
   newPassword: string;
 }
 
 export interface EmailVerificationInput {
-  token: string;
+  token?: string;
+  email?: string;
+  otp?: string;
+}
+
+export interface OtpVerificationInput {
+  email: string;
+  otp: string;
+}
+
+export interface RegistrationOtpInput {
+  email: string;
+  role?: string;
+}
+
+export interface RegistrationVerifyInput {
+  email: string;
+  otp: string;
+  name: string;
+  password: string;
+  role?: string;
 }
 
 export interface PaginationQuery {
@@ -184,4 +209,62 @@ export interface AppConfig {
   socket: {
     corsOrigin: string;
   };
+}
+
+export interface JobCreateInput {
+  title: string;
+  description: string;
+  requirements?: string[];
+  skills?: string[];
+  category: string;
+  type: string[];
+  location: string;
+  isRemote?: boolean;
+  salary: {
+    min: number;
+    max: number;
+    currency?: string;
+  };
+  duration?: string;
+  applicationDeadline?: number;
+  companyName: string;
+  companyLogo?: string;
+  companyCoverImage?: string;
+  expiresAt?: number;
+}
+
+export interface JobUpdateInput {
+  title?: string;
+  description?: string;
+  requirements?: string[];
+  skills?: string[];
+  category?: string;
+  type?: string[];
+  location?: string;
+  isRemote?: boolean;
+  salary?: {
+    min: number;
+    max: number;
+    currency?: string;
+  };
+  duration?: string;
+  applicationDeadline?: number;
+  companyName?: string;
+  companyLogo?: string;
+  companyCoverImage?: string;
+  expiresAt?: number;
+  status?: string;
+}
+
+export interface JobFilterQuery extends PaginationQuery {
+  category?: string;
+  type?: string;
+  location?: string;
+  isRemote?: string;
+  minSalary?: number;
+  maxSalary?: number;
+  keyword?: string;
+  sort?: string;
+  postedBy?: string;
+  status?: string;
 }

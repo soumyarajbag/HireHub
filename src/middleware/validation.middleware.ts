@@ -15,7 +15,9 @@ export const validateUserRegistration = [
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    .withMessage(
+      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    ),
 ];
 
 export const validateUserLogin = [
@@ -23,9 +25,7 @@ export const validateUserLogin = [
     .isEmail()
     .normalizeEmail()
     .withMessage('Please provide a valid email address'),
-  body('password')
-    .notEmpty()
-    .withMessage('Password is required'),
+  body('password').notEmpty().withMessage('Password is required'),
 ];
 
 export const validatePasswordReset = [
@@ -36,20 +36,105 @@ export const validatePasswordReset = [
 ];
 
 export const validatePasswordResetConfirm = [
-  body('token')
-    .notEmpty()
-    .withMessage('Reset token is required'),
+  body('token').notEmpty().withMessage('Reset token is required'),
   body('newPassword')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    .withMessage(
+      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    ),
+];
+
+export const validateRefreshToken = [
+  body('refreshToken')
+    .notEmpty()
+    .withMessage('Refresh token is required')
+    .isString()
+    .withMessage('Refresh token must be a string'),
+];
+
+// OTP Validation Rules
+export const validateOtp = [
+  body('otp')
+    .notEmpty()
+    .withMessage('OTP is required')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be 6 digits')
+    .isNumeric()
+    .withMessage('OTP must contain only numbers'),
+];
+
+export const validateEmailForOtp = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email address'),
+];
+
+export const validateRegistrationOtp = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email address'),
+  body('role')
+    .optional()
+    .isIn(['hr', 'applicant', 'user', 'admin', 'moderator'])
+    .withMessage('Invalid role'),
+];
+
+export const validateRegistrationVerify = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email address'),
+  body('otp')
+    .notEmpty()
+    .withMessage('OTP is required')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be 6 digits')
+    .isNumeric()
+    .withMessage('OTP must contain only numbers'),
+  body('name')
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Name must be between 2 and 100 characters'),
+  body('password')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage(
+      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    ),
+  body('role')
+    .optional()
+    .isIn(['hr', 'applicant', 'user', 'admin', 'moderator'])
+    .withMessage('Invalid role'),
+];
+
+export const validatePasswordResetOtp = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email address'),
+  body('otp')
+    .notEmpty()
+    .withMessage('OTP is required')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be 6 digits')
+    .isNumeric()
+    .withMessage('OTP must contain only numbers'),
+  body('newPassword')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage(
+      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    ),
 ];
 
 export const validateEmailVerification = [
-  body('token')
-    .notEmpty()
-    .withMessage('Verification token is required'),
+  body('token').notEmpty().withMessage('Verification token is required'),
 ];
 
 export const validateUserUpdate = [
@@ -73,13 +158,13 @@ export const validatePasswordChange = [
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    .withMessage(
+      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    ),
 ];
 
 export const validateMongoId = (paramName: string) => [
-  param(paramName)
-    .isMongoId()
-    .withMessage(`Invalid ${paramName} ID format`),
+  param(paramName).isMongoId().withMessage(`Invalid ${paramName} ID format`),
 ];
 
 export const validatePagination = [
@@ -91,10 +176,7 @@ export const validatePagination = [
     .optional()
     .isInt({ min: 1, max: 100 })
     .withMessage('Limit must be between 1 and 100'),
-  query('sort')
-    .optional()
-    .isString()
-    .withMessage('Sort must be a string'),
+  query('sort').optional().isString().withMessage('Sort must be a string'),
   query('order')
     .optional()
     .isIn(['asc', 'desc'])
@@ -123,10 +205,18 @@ export const validateNotification = [
     .withMessage('Invalid notification type'),
 ];
 
-export const handleValidationErrors = (req: Request, res: Response, next: NextFunction) => {
+export const handleValidationErrors = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return ResponseHandler.validationError(res, 'Validation failed', errors.array());
+    return ResponseHandler.validationError(
+      res,
+      'Validation failed',
+      errors.array()
+    );
   }
   next();
 };

@@ -8,10 +8,15 @@ export class UserRepository extends BaseRepository<IUser> {
   }
 
   public async findByEmailWithPassword(email: string): Promise<IUser | null> {
-    return await this.model.findOne({ email: email.toLowerCase() }).select('+password').exec();
+    return await this.model
+      .findOne({ email: email.toLowerCase() })
+      .select('+password')
+      .exec();
   }
 
-  public async findByEmailVerificationToken(token: string): Promise<IUser | null> {
+  public async findByEmailVerificationToken(
+    token: string
+  ): Promise<IUser | null> {
     return await this.findOne({ emailVerificationToken: token });
   }
 
@@ -41,11 +46,9 @@ export class UserRepository extends BaseRepository<IUser> {
   }
 
   public async incrementTokenVersion(userId: string): Promise<IUser | null> {
-    return await this.model.findByIdAndUpdate(
-      userId,
-      { $inc: { tokenVersion: 1 } },
-      { new: true }
-    ).exec();
+    return await this.model
+      .findByIdAndUpdate(userId, { $inc: { tokenVersion: 1 } }, { new: true })
+      .exec();
   }
 
   public async clearPasswordResetToken(userId: string): Promise<IUser | null> {
@@ -110,7 +113,17 @@ export class UserRepository extends BaseRepository<IUser> {
                           k: '$$this.role',
                           v: {
                             $add: [
-                              { $ifNull: [{ $getField: { field: '$$this.role', input: '$$value' } }, 0] },
+                              {
+                                $ifNull: [
+                                  {
+                                    $getField: {
+                                      field: '$$this.role',
+                                      input: '$$value',
+                                    },
+                                  },
+                                  0,
+                                ],
+                              },
                               1,
                             ],
                           },

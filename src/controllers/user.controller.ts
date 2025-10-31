@@ -11,7 +11,7 @@ const userService = new UserService(userRepository);
 export class UserController extends BaseController {
   public getUsers = asyncHandler(async (req: Request, res: Response) => {
     const result = await userService.findWithPagination({}, req.query);
-    
+
     return this.handleSuccess(
       res,
       'Users retrieved successfully',
@@ -23,80 +23,59 @@ export class UserController extends BaseController {
 
   public getUserById = asyncHandler(async (req: Request, res: Response) => {
     const user = await userService.findById(req.params.id);
-    
+
     if (!user) {
       return this.handleNotFound(res, 'User not found');
     }
-    
-    return this.handleSuccess(
-      res,
-      'User retrieved successfully',
-      { user }
-    );
+
+    return this.handleSuccess(res, 'User retrieved successfully', { user });
   });
 
   public updateUser = asyncHandler(async (req: Request, res: Response) => {
     const user = await userService.updateUser(req.params.id, req.body);
-    
+
     if (!user) {
       return this.handleNotFound(res, 'User not found');
     }
-    
-    return this.handleSuccess(
-      res,
-      'User updated successfully',
-      { user }
-    );
+
+    return this.handleSuccess(res, 'User updated successfully', { user });
   });
 
   public deleteUser = asyncHandler(async (req: Request, res: Response) => {
     const success = await userService.deleteUser(req.params.id);
-    
+
     if (!success) {
       return this.handleNotFound(res, 'User not found');
     }
-    
-    return this.handleSuccess(
-      res,
-      'User deleted successfully'
-    );
+
+    return this.handleSuccess(res, 'User deleted successfully');
   });
 
   public deactivateUser = asyncHandler(async (req: Request, res: Response) => {
     const user = await userService.deactivateUser(req.params.id);
-    
+
     if (!user) {
       return this.handleNotFound(res, 'User not found');
     }
-    
-    return this.handleSuccess(
-      res,
-      'User deactivated successfully',
-      { user }
-    );
+
+    return this.handleSuccess(res, 'User deactivated successfully', { user });
   });
 
   public activateUser = asyncHandler(async (req: Request, res: Response) => {
     const user = await userService.activateUser(req.params.id);
-    
+
     if (!user) {
       return this.handleNotFound(res, 'User not found');
     }
-    
-    return this.handleSuccess(
-      res,
-      'User activated successfully',
-      { user }
-    );
+
+    return this.handleSuccess(res, 'User activated successfully', { user });
   });
 
   public getUserStats = asyncHandler(async (req: Request, res: Response) => {
     const stats = await userService.getUserStats();
-    
-    return this.handleSuccess(
-      res,
-      'User statistics retrieved successfully',
-      { stats: stats[0] || {} }
-    );
+
+    return this.handleSuccess(res, 'User statistics retrieved successfully', {
+      stats: stats[0] || {},
+    });
   });
 }
