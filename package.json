@@ -1,7 +1,7 @@
 {
-  "name": "express-typescript-backend",
+  "name": "hirehub-backend",
   "version": "1.0.0",
-  "description": "Express + TypeScript backend with modular OOP architecture",
+  "description": "HireHub backend with modular OOP architecture",
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
